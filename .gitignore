@@ -181,6 +181,9 @@ ref-todoList.zip
 # Local backups (not for repo)
 backups/
 
+# 本机调试用内置课表（上机试"正在上课"样式用，勿入库）
+src/common/dev-schedule.js
+
 
 # Local-only helper scripts / debug dumps (do not upload)
 /check_*.py

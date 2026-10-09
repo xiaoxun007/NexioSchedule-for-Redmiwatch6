@@ -16,6 +16,11 @@ function formatDate(date) {
   return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日'
 }
 
+/** 首页头部用的短日期（设计稿：9月30日） */
+function formatShortDate(date) {
+  return date.getMonth() + 1 + '月' + date.getDate() + '日'
+}
+
 function formatClock(date) {
   return pad2(date.getHours()) + ':' + pad2(date.getMinutes())
 }
@@ -65,12 +70,15 @@ function formatCountdown(target, now) {
   const hours = Math.floor(totalMin / 60)
   const mins = totalMin % 60
   let text
-  if (hours > 0) {
-    text = hours + '小时' + mins + '分钟后'
+  // 文案对齐设计稿：「还有 3 分钟」
+  if (hours > 0 && mins > 0) {
+    text = '还有 ' + hours + ' 小时 ' + mins + ' 分钟'
+  } else if (hours > 0) {
+    text = '还有 ' + hours + ' 小时'
   } else if (mins > 0) {
-    text = mins + '分钟后'
+    text = '还有 ' + mins + ' 分钟'
   } else {
-    text = '即将开始'
+    text = '马上开始'
   }
   return {
     text: text,
@@ -96,14 +104,14 @@ function formatRemain(target, now) {
   const mins = totalMin % 60
   let body
   if (hours > 0 && mins > 0) {
-    body = hours + '小时' + mins + '分钟'
+    body = hours + ' 小时 ' + mins + ' 分钟'
   } else if (hours > 0) {
-    body = hours + '小时'
+    body = hours + ' 小时'
   } else {
     body = totalMin + ' 分钟'
   }
   return {
-    text: '还剩 ' + body,
+    text: '还有 ' + body,
     ended: false,
     upcoming: true
   }
@@ -146,6 +154,7 @@ function getCourseStatus(course, now, dayDate) {
 export default {
   getWeekday,
   formatDate,
+  formatShortDate,
   formatClock,
   isSameDay,
   startOfDay,
