@@ -1,0 +1,107 @@
+diff --git a/src/common/sync.js b/src/common/sync.js
+index 129dc1c..f628b3d 100644
+--- a/src/common/sync.js
++++ b/src/common/sync.js
+@@ -407,10 +407,26 @@ function handlePhoneMessage(raw) {
+     if (rev === appliedRev) notify()
+   })
+   notify()
++  sendAck(result.payload.sentAt)
+   console.log('[sync] applied rev=' + rev + ' ' + lastShape)
+   return { ok: true, shape: lastShape }
+ }
+ 
++/** 收到整包并落地后回一个 ACK，手机端按 sentAt 匹配确认推送是否真正送达；
++ *  失败仅记日志，不影响落地结果。 */
++function sendAck(sentAt) {
++  if (!connect || !sentAt) return
++  connect.send({
++    data: { protocol: PROTOCOL, version: PROTOCOL_VERSION, action: ACTION.ACK, sentAt: sentAt },
++    success: function () {
++      console.log('[sync] ack sent for sentAt=' + sentAt)
++    },
++    fail: function (data, code) {
++      console.log('[sync] ack fail ' + code)
++    }
++  })
++}
++
+ function handleMessageEvent(evt) {
+   if (!evt) return
+   // 文档：connect.onmessage 回调参数 data 为 String，实际可能是 { data }
+@@ -426,26 +442,21 @@ function bindConnect() {
+     lastError = null
+     console.log('[sync] interconnect open, reconnected=', data && data.isReconnected)
+     notifyConnected()
+-    // force：重连事件必须立刻拉一次，不能被节流窗口吞掉。
+-    // （之前不带 force：开机时通道没连上的失败请求会占掉 15s 窗口，
+-    // 手机随后连上时这次 reconnect 被节流 → 课表最长等一个轮询周期才同步）
+-    requestSync('reconnect', true)
+-    startPolling()
++    // 纯被动：打开通道不主动 request、不轮询，只等手机推送
+   }
+   connect.onclose = function (data) {
+     ready = false
+     connectNotified = false
+     lastError = (data && data.data) || 'closed'
+     console.log('[sync] interconnect closed', lastError)
+-    // 手机断连后停止轮询，避免无效空转；重连时恢复
+-    stopPolling()
++    notify()
+   }
+   connect.onerror = function (data) {
+     ready = false
+     connectNotified = false
+     lastError = (data && (data.data || data.code)) || 'error'
+     console.log('[sync] interconnect error', lastError)
+-    stopPolling()
++    notify()
+   }
+ }
+ 
+@@ -472,12 +483,10 @@ function requestSync(reason, force) {
+     data: body,
+     success: function () {
+       console.log('[sync] request sent (' + body.reason + ')')
+-      scheduleRetry()
+     },
+     fail: function (data, code) {
+       lastError = 'request fail ' + code
+       console.log('[sync] request fail', lastError)
+-      scheduleRetry()
+     }
+   })
+ }
+@@ -507,19 +516,11 @@ function scheduleRetry() {
+  * 打开应用/从表盘回到应用时不再被动等推送。
+  */
+ function ensureFresh(reason) {
+-  const tag = reason || 'ensure-fresh'
+-  if (!lastAt || Date.now() - lastAt > STALE_MS) {
+-    retryCount = 0
+-    requestSync(tag, true)
+-    return true
+-  }
+-  // 数据还新，但通道没连上时也试一次（可能刚开机/刚重连）
+-  if (!ready) {
+-    requestSync(tag)
+-    return true
+-  }
++  // 纯被动：页面 onShow 不再主动向手机要数据，只刷本地时钟与显示；
++  // 课表由手机端推送。保留空函数以兼容页面调用。
+   return false
+ }
++}
+ 
+ /**
+  * 启动同步通道：先恢复本地缓存，再监听手机消息
+@@ -583,8 +584,7 @@ function init() {
+         if (ready) {
+           // 应用启动时通道已就绪：onopen 可能不会再触发，这里直接提示
+           notifyConnected()
+-          requestSync('app-open')
+-          startPolling()
++          // 纯被动：启动不主动拉、不轮询
+         }
+       },
+       fail: function (data, code) {

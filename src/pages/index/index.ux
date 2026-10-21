@@ -58,90 +58,11 @@
              回到今天时「今」不渲染，只剩「关于」，由 .actions 的居中自动归位。
              无课时它跟在空态后面，空态上移它自然跟着上移，无需单独变体。 -->
         <div class="actions">
-          <div class="pill pill-about" onclick="onTabAbout">
-            <text class="pill-text">关于</text>
-          </div>
           <div class="pill pill-today" if="{{day.showToday}}" onclick="onBackToday">
             <text class="pill-text">今</text>
           </div>
         </div>
       </div>
-    </scroll>
-
-    <scroll class="body" scroll-y="true" bounces="true" if="{{isAbout}}">
-    <div class="screen screen-about">
-      <!-- 头部（设计稿 38:418）：返回 + 应用状态 + 当前时间 -->
-      <div class="{{clsAbHead}}">
-        <div class="ab-back" onclick="onTabHome">
-          <image class="ab-caret" src="/common/caret_left.png"></image>
-        </div>
-        <text class="ab-title">应用状态</text>
-        <text class="ab-clock">{{day.clockText}}</text>
-      </div>
-
-      <!-- 应用信息（38:423）：黑底直排，无卡片背景 -->
-      <div class="ab-app">
-        <image class="ab-app-icon" src="/common/about_icon_round.png"></image>
-        <div class="ab-app-text">
-          <text class="ab-app-name">Nexio课程表</text>
-          <text class="ab-app-ver">v{{versionName}}</text>
-        </div>
-      </div>
-
-      <!-- 手机连接状态卡（38:441 未连接 / 38:506 已连接）：
-           卡片常驻，按连接态换渐变底、时间颜色与右上角状态图标 -->
-      <div class="card status-card">
-        <image class="st-bg" src="{{diagBg}}"></image>
-        <div class="st-row1">
-          <text class="st-title">{{diagStatus}}</text>
-        </div>
-        <image class="st-icon" src="{{diagIcon}}"></image>
-        <text class="st-time {{diagTimeCls}}">{{diagTime}}</text>
-        <text class="st-label">最后一次本地更新时间</text>
-      </div>
-
-      <div class="sec-wrap">
-        <text class="section-label">开发人员名单</text>
-      </div>
-
-      <!-- 人员卡（38:456）：3 行 64 头像 + 姓名/职能 -->
-      <div class="card people-card">
-        <div class="person p1">
-          <image class="avatar" src="/common/photo1.png"></image>
-          <div class="person-text">
-            <text class="person-name">一個小果冻</text>
-            <text class="person-role">快应用开发设计</text>
-          </div>
-        </div>
-        <div class="person p2">
-          <image class="avatar" src="/common/photo3.png"></image>
-          <div class="person-text">
-            <text class="person-name">安龙 Aurysian</text>
-            <text class="person-role">快应用 UI 设计</text>
-          </div>
-        </div>
-        <div class="person p3">
-          <image class="avatar" src="/common/photo2.png"></image>
-          <div class="person-text">
-            <text class="person-name">Sunlight</text>
-            <text class="person-role">原应用开发设计</text>
-          </div>
-        </div>
-      </div>
-
-      <div class="sec-wrap">
-        <text class="section-label">打赏支持</text>
-      </div>
-
-      <!-- 打赏（38:480）：二维码固定展示；按需求不提供点击放大/跳页 -->
-      <div class="card rw-card">
-        <div class="rw-block">
-          <image class="rw-qr" src="/common/reward_qr.png"></image>
-          <image class="rw-band" src="/common/rw_band.png"></image>
-          <text class="rw-band-text">微信</text>
-        </div>
-      </div>
-    </div>
     </scroll>
 
     <div class="sys-back-edge" if="{{isHome}}"></div>
@@ -186,13 +107,6 @@
       </div>
     </div>
 
-    <!-- 关于页的返回（设计稿头部已有 ‹，底部药丸沿用原交互保留） -->
-    <div class="backbar" if="{{isAbout}}">
-      <div class="pill pill-about" onclick="onTabHome">
-        <text class="pill-text">返回</text>
-      </div>
-    </div>
-
     <!-- 连接提示：常驻节点只切换可见性（Vela 3.6 避免重建节点），位置在底部栏上方 -->
     <div class="toast" show="{{toastVisible}}">
       <text class="toast-text">{{toastText}}</text>
@@ -208,6 +122,14 @@ import device from '@system.device'
 
 /** 左缘留给系统「右滑回桌面」的宽度，与 .sys-back-edge 保持一致 */
 const EDGE_W = 14
+/** 手势分区下限：固定头部高 95px + 15px 缓冲 ≈ 110。
+ *  起手 y < 110 视为顶部固定头部区（右滑退出应用）；
+ *  y >= 110 为课表区及以下，左右滑切日期（用户主操作区）。
+ *  按目标屏固定头高度标定：LOWER_ZONE_Y = 固定头高 + 缓冲。 */
+const LOWER_ZONE_Y = 110
+/** 屏高（designWidth 坐标，RW6 432×514 @336 → 约 400）。
+ *  起手 y 超出此值视为坐标异常，走安全降级。 */
+const SCREEN_H = 400
 /** 设计稿主卡图标：正在上课 / 下节课 用纸飞机，快上课了 用喇叭 */
 const ICON_PLANE = '/common/hero_plane.png'
 const ICON_MEGAPHONE = '/common/hero_megaphone.png'
@@ -535,7 +457,9 @@ export default {
     const p = this.touchXY(t)
     // 左缘起手不切日，留给系统「右滑回桌面」
     this._touchFromEdge = !!(p && p.x <= EDGE_W)
-    // 同一手势只允许触发一次切日（出入场双层都会挂 handler）
+    // 记录起手 y 用于手势分区；无坐标时记 null（onSwipe 走安全降级）
+    this._touchY = (p && typeof p.y === 'number' && p.y >= 0 && p.y <= SCREEN_H) ? p.y : null
+    // 同一手势只允许触发一次（双层都会挂 handler）
     this._gestureSwiped = false
   },
   onSwipe(e) {
@@ -548,10 +472,17 @@ export default {
     this._gestureSwiped = true
     const dir = e && e.direction
     if (dir !== 'left' && dir !== 'right') return
-    // 宽屏（RW6）此前"卡半屏"的冻结源头是横向回弹：回弹期间/之后的切日重渲染
-    // 把视图冻在半屏偏移处（300ms 延迟实测无效）。现在宽屏关掉 scroll 的 bounces
-    // （scrollBounces=false，probePlatform 里置位），回弹不存在了，横滑即时切日安全。
-    // 窄屏（手环 9 Pro）bounces 保持 true，本就无回弹冻结问题，同样即时切换。
+    // 安全降级：起手 y 不可用（字段缺失/越界）时退化为全屏切日，
+    // 绝不进入退出分支——退出是最危险操作，坐标无效宁可失去分区也不误退。
+    const y = this._touchY
+    if (y != null && y < LOWER_ZONE_Y) {
+      // 顶部固定头部区：右滑退出应用；左滑无关于页可去，不动作。
+      if (dir === 'right') {
+        this.$app.exit()
+      }
+      return
+    }
+    // 课表区及以下（或坐标安全降级）：左右滑切日期
     this.goDay(dir === 'left' ? 1 : -1)
   },
   onTabHome() {
@@ -561,15 +492,6 @@ export default {
     this.barMaskCls = 'bm-home'
     this.barMaskSrc = '/common/barmask_home.png'
     this.refreshHome()
-  },
-  onTabAbout() {
-    this.isHome = false
-    this.isAbout = true
-    this.aboutActive = true
-    this.barMaskCls = 'bm-about'
-    this.barMaskSrc = '/common/barmask_about.png'
-    // 进关于页时刷新一次连接状态（连接变化不一定伴随课表推送）
-    this.refreshDiagnostics()
   }
 }
 </script>
