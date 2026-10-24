@@ -159,6 +159,13 @@ function findWorkSwap(date) {
  * 注意顺序：假期判定必须在调休映射之后覆盖，手机端也是先算候选课再用假期清空。
  */
 function resolveDisplayDayKey(date) {
+  const ov = overrideFor(date)
+  if (ov) {
+    if (ov.holiday) return -1
+    // override.weekday 是手机端 ISO 域（1=周一..7=周日），转内部 0=周日..6=周六
+    const wd = phoneDayToWatchDay(ov.weekday)
+    return wd >= 0 ? wd : date.getDay()
+  }
   const mapped = workSwapTargetDay(findWorkSwap(date))
   if (findHolidayEntry(date, 0)) return -1
   if (mapped >= 0) return mapped
@@ -167,12 +174,19 @@ function resolveDisplayDayKey(date) {
 
 /**
  * 假期判定：直接查手机下发的 holidays 列表（v4 整表是学期权威数据）。
+ * v4.1：该日被手机裁决过（overrides）时以手机答案为准 —— 手机端
+ * HolidayCourseExclusion 的「末日例外」会让学生日在假期区间里恢复上课，
+ * 手环按区间自己判会误显示「假期无课」。
  */
 function isHolidayDate(date) {
+  const ov = overrideFor(date)
+  if (ov) return !!ov.holiday
   return findHolidayEntry(date, 0) != null
 }
 
 function holidayNameFor(date) {
+  const ov = overrideFor(date)
+  if (ov) return ov.holidayName || ''
   const h = findHolidayEntry(date, 0) || findHolidayEntry(date, 1)
   return h ? (h.name || '') : ''
 }
@@ -197,6 +211,33 @@ function holidayNameFor(date) {
 let fullCourses = []
 let fullSettings = null
 let fullSectionTimes = {}
+/**
+ * v4.1 逐日裁决覆盖表：key = 'YYYY-MM-DD'，value = 手机 override 条目。
+ * 手机端对调休日/假期端点日直接下发它自己今日页的裁决结果（课程列表 + 假期标志 +
+ * 教学周 + 显示星期 + 假期名）。命中即整日采用 —— 这些日子手环**不再**自行推算，
+ * 从根上消除「调休日时间/节数不跟随手机」以及跟随周、节次剔除、按日作息三类偏差。
+ * 未命中的日期维持 v4.0 原推算路径，行为逐字节不变。
+ */
+let dayOverrides = {}
+
+/** 写入覆盖表（sync 应用 payload 与冷启动复原共用）。非法形态一律清空回退推算。 */
+function setDayOverrides(list) {
+  dayOverrides = {}
+  if (!Array.isArray(list)) return
+  for (let i = 0; i < list.length; i++) {
+    const o = list[i]
+    if (o && typeof o.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.date)) {
+      dayOverrides[o.date] = o
+    }
+  }
+}
+
+/** 当天命中的 override；未启用整表模式时也必须能查到（缓存里带着 overrides） */
+function overrideFor(date) {
+  if (!dayOverrides) return null
+  return dayOverrides[dateKey(date)] || null
+}
+
 /** 整表周次校准偏移（调休合并周等导致日历周与手机教学周的差），见 calibrateWeekOffset */
 let weekOffset = 0
 
@@ -369,6 +410,7 @@ function clearWeekState() {
   fullSettings = null
   fullSectionTimes = {}
   weekOffset = 0
+  dayOverrides = {}
 }
 
 /**
@@ -391,6 +433,8 @@ function activeWeek() {
  * 推算不出（未下发/日期在第一周周一之前）返回 0，调用方回退到 activeWeek()。
  */
 function weekForDate(date) {
+  const ov = overrideFor(date)
+  if (ov && ov.week > 0) return ov.week
   if (!fullSettings || !fullSettings.semesterStart) return 0
   const base = calendarWeekFor(date, fullSettings.semesterStart)
   if (base <= 0) return 0
@@ -607,6 +651,37 @@ function cloneCourse(course, index, dayKey) {
  * 调休由 resolveDisplayDayKey 换成目标星期，假期返回 -1 表示当天不排课。
  */
 function getTodayCourses(date) {
+  const ov = overrideFor(date)
+  if (ov) {
+    // 手机已把当天要上的课逐条裁决完（含节次剔除后的实际清单）。
+    // 课程条目与顶层 courses 同构（dayOfWeek 1-7），复用 normalizeFullCourse
+    // 走同一条解析/时间链路，避免第二套取数代码；排序与 fullCoursesForDay 一致按开始时间。
+    if (ov.holiday) return []
+    const out = []
+    const list = Array.isArray(ov.courses) ? ov.courses : []
+    for (let i = 0; i < list.length; i++) {
+      const c = normalizeFullCourse(list[i], i)
+      if (!c) continue
+      const t = fullCourseTimes(c)
+      out.push({
+        id: c.id,
+        name: c.name,
+        location: c.location,
+        teacher: c.teacher,
+        startTime: t.startTime,
+        endTime: t.endTime,
+        periods: fullSectionText(c),
+        section: fullCourseSection(c),
+        week: ov.week || 0
+      })
+    }
+    out.sort(function (a, b) {
+      const x = a.startTime || ''
+      const y = b.startTime || ''
+      return x < y ? -1 : x > y ? 1 : 0
+    })
+    return out
+  }
   const day = resolveDisplayDayKey(date)
   if (day < 0) return []
   return fullCoursesForDay(day, lookupWeekFor(date))
@@ -808,6 +883,7 @@ export default {
   setQuote,
   getQuote,
   setHolidays,
+  setDayOverrides,
   getHolidays,
   isHolidayDate,
   holidayNameFor,

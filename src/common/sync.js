@@ -320,7 +320,8 @@ function normalizePayload(raw) {
       holidays: holidayList,
       courses: parsed.courses,
       settings: st,
-      times: isPlainObject(parsed.times) ? parsed.times : {}
+      times: isPlainObject(parsed.times) ? parsed.times : {},
+      overrides: Array.isArray(parsed.overrides) ? parsed.overrides : []
     }
   }
 }
@@ -337,7 +338,8 @@ function compactForCache(payload) {
     holidays: payload.holidays || [],
     courses: payload.courses || [],
     settings: payload.settings || {},
-    times: payload.times || {}
+    times: payload.times || {},
+    overrides: payload.overrides || []
   }
 }
 
@@ -371,6 +373,7 @@ function applyPayload(payload) {
   cachedQuote = payload.quote || ''
   if (payload.action === ACTION.CLEAR) {
     schedule.clearWeekState()
+    schedule.setDayOverrides([])
     schedule.setHolidays([])
     schedule.setQuote(cachedQuote)
     return
@@ -381,6 +384,7 @@ function applyPayload(payload) {
     times: payload.times || {}
   })
   schedule.setHolidays(payload.holidays || [])
+  schedule.setDayOverrides(payload.overrides || [])
   schedule.setQuote(cachedQuote)
 }
 
