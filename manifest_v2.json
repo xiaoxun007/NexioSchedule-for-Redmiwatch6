@@ -33,10 +33,14 @@
   ],
   "downloads": {
     "xmb10p": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -52,10 +56,14 @@
       ]
     },
     "xmb10": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release-xmb10.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release-xmb10.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -71,10 +79,14 @@
       ]
     },
     "xmb11": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release-xmb10.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release-xmb10.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -90,10 +102,14 @@
       ]
     },
     "xmb10nfc": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release-xmb10.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release-xmb10.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -109,10 +125,14 @@
       ]
     },
     "xmb11nfc": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release-xmb10.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release-xmb10.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -128,10 +148,14 @@
       ]
     },
     "xmrw5": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -143,10 +167,14 @@
       ]
     },
     "xmrw6": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -158,10 +186,14 @@
       ]
     },
     "xmrw5xring": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -173,10 +205,14 @@
       ]
     },
     "xmb9": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release-xmb10.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release-xmb10.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
@@ -188,10 +224,14 @@
       ]
     },
     "xmb9p": {
-      "version": "2.0.2-release",
-      "file_name": "downloads/com.haooz.chedule.release.2.0.2-release.rpk",
-      "versionCode": 38,
+      "version": "2.0.3-release",
+      "file_name": "downloads/com.haooz.chedule.release.2.0.3-release.rpk",
+      "versionCode": 39,
       "updatelogs": [
+        {
+          "version": "2.0.3-release",
+          "content": "修复已知BUG，提升课表稳定性"
+        },
         {
           "version": "2.0.2-release",
           "content": "1.新增v4.1版本sync，支持同步调休日的课程同步修改"
