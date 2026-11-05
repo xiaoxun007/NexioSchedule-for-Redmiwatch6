@@ -23,7 +23,7 @@ name: 同步上游并构建 Release RPK
 
 "on":
   schedule:
-    - cron: '0 * * * *'          # 每小时检查上游是否有新提交
+    - cron: '0 3 */2 * *'        # 每隔 2 天凌晨 3 点检查上游是否有新提交
   workflow_dispatch: {}          # 支持手动触发
 
 permissions:
@@ -48,7 +48,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/Alittlejelly/NexioSchedule-for-MiBand.git
-          git fetch upstream main
+          # 锁定上游到 v1.1.2 tag（4a23ffb），不跟随上游 main——2.0.x 在 RW6 黑屏，
+          # 回退到 v1.1.2 可用版；后续若升级再改这里的 tag。
+          git fetch upstream tag v1.1.2
+          git update-ref refs/remotes/upstream/main FETCH_HEAD
 
       - name: 判断上游是否有新提交
         id: check
@@ -80,6 +83,8 @@ jobs:
           cp /tmp/keep/README.md ./README.md 2>/dev/null || true
           cp /tmp/keep/CHANGELOG.md ./CHANGELOG.md 2>/dev/null || true
           git add -A
+          # .github 被 .gitignore 忽略，必须 force-add，否则恢复的 workflow 不进提交
+          git add -f .github/workflows/sync-upstream-build-release.yml
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -m "sync: 对齐上游 $(git rev-parse --short upstream/main) 并保留补丁/签名/文档" --no-verify || true
           # fork main = 上游最新 + 特有文件，历史由本 workflow 全权管理，force push 覆盖旧提交
@@ -130,7 +135,7 @@ jobs:
           # 且随上游 vc 自增自动留出足够 headroom。当前本地手工版 vc33 << 3101，可直接覆盖升级。
           UP_VNAME=$(python3 -c "import json;print(json.load(open('src/manifest.json'))['versionName'])")
           UP_VC=$(python3 -c "import json;print(json.load(open('src/manifest.json'))['versionCode'])")
-          GH_N=$(gh release list --repo xiaoxun007/NexioSchedule-for-MiBand --limit 200 2>/dev/null \
+          GH_N=$(gh release list --repo xiaoxun007/NexioSchedule-for-Redmiwatch6 --limit 200 2>/dev/null \
                  | grep -c "^v${UP_VNAME}-gh" || true)
           GH_N=$((GH_N + 1))
           FORK_VNAME="${UP_VNAME}-gh${GH_N}"
@@ -228,6 +233,6 @@ jobs:
           print(notes)
           PYEOF
           gh release create "$TAG" "$ASSET" \
-            --repo xiaoxun007/NexioSchedule-for-MiBand \
+            --repo xiaoxun007/NexioSchedule-for-Redmiwatch6 \
             --title "$TAG" \
             --notes-file /tmp/release_notes.md || echo "Release 已存在或创建失败（忽略）"
